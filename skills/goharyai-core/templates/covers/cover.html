@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--
+  Cover / thumbnail page. Render with:
+    node still.js cover.html out.jpg --w 1080 --h 1920 --data data.json      (reel cover 9:16)
+    node still.js cover.html out.jpg --w 1280 --h 720  --data data.json      (YouTube thumbnail 16:9)
+  data.json: { "title": "3 AI tools *that sell*", "kicker": "FREE GUIDE", "sub": "for online sellers",
+               "image": "file:///C:/path/photo.png",   // optional: person/product cutout, placed right (or left in RTL)
+               "bg": "file:///C:/path/scene.jpg",      // optional: full-bleed background photo
+               "theme": "dark"|"light", "layout": "poster"|"split"|"center" }
+  Reel covers: everything important sits inside the central 1:1 square (y 420–1500) so the profile grid shows it.
+  *asterisks* colour a word with the accent. Keep titles to 2–5 words; thumbnails are read at 150 px wide.
+-->
+<style>
+  html,body{margin:0;overflow:hidden;background:var(--bg)}
+  #scene{position:absolute;inset:0;font-family:var(--latin),var(--arabic),sans-serif;color:var(--text)}
+  .bg{position:absolute;inset:0;background-size:cover;background-position:center}
+  .bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.65))}
+  .light .bg:after{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.55))}
+  .fx{position:absolute;inset:0;background:radial-gradient(circle at 75% 15%,rgba(228,0,0,.22),transparent 50%)}
+  .safe{position:absolute;left:7%;right:7%;display:flex;flex-direction:column;justify-content:center;gap:.4em}
+  .kicker{display:inline-block;align-self:flex-start;background:var(--accent);color:#fff;font-weight:800;padding:.35em .9em;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+  .title{font-weight:900;line-height:1.0;letter-spacing:-.03em}.title b{color:var(--accent)}
+  .sub{font-weight:600;opacity:.8}
+  .img{position:absolute;bottom:0;right:0;height:62%;filter:drop-shadow(0 30px 50px rgba(0,0,0,.5))}
+  .img img{height:100%;width:auto;display:block}
+  [dir=rtl] .img{right:auto;left:0}
+  #logo{position:absolute;left:5%;bottom:4%}
+  .center .safe{text-align:center;align-items:center}
+  .split .safe{right:45%}
+</style>
+</head>
+<body><div id="scene"></div>
+<script>
+const B = window.BRAND, C = B.colors, root = document.documentElement;
+root.style.setProperty('--accent', C.accent);
+root.style.setProperty('--latin', '"' + B.fonts.latin + '"'); root.style.setProperty('--arabic', '"' + B.fonts.arabic + '"');
+const hot = s => (s || '').replace(/\*(.+?)\*/g, '<b>$1</b>');
+window.init = d => {
+  const theme = d.theme || 'dark', W = innerWidth, H = innerHeight, portrait = H > W, layout = d.layout || (d.image ? 'split' : 'poster');
+  root.style.setProperty('--bg', theme === 'dark' ? C.ink_deep : C.paper); root.style.setProperty('--text', theme === 'dark' ? C.paper : C.ink);
+  const dir = /[\u0600-\u06FF]/.test(d.title) ? 'rtl' : 'ltr';
+  const base = Math.min(W, H);                              // type scales with the short side
+  const top = portrait ? '22%' : '12%', bottom = portrait ? '22%' : '12%';
+  document.getElementById('scene').className = `${theme} ${layout}`;
+  document.getElementById('scene').innerHTML = `
+    ${d.bg ? `<div class="bg" style="background-image:url('${d.bg}')"></div>` : '<div class="fx"></div>'}
+    ${d.image ? `<div class="img"><img src="${d.image}"></div>` : ''}
+    <div class="safe" dir="${dir}" style="top:${top};bottom:${bottom}">
+      ${d.kicker ? `<div class="kicker" style="font-size:${base * .034}px">${d.kicker}</div>` : ''}
+      <div class="title" style="font-size:${base * (d.size || .13)}px">${hot(d.title)}</div>
+      ${d.sub ? `<div class="sub" style="font-size:${base * .05}px">${hot(d.sub)}</div>` : ''}
+    </div>
+    <div id="logo">${K.logo(theme, Math.round(base * .055))}</div>`;
+};
+</script>
+</body>
+</html>

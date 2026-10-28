@@ -1,0 +1,32 @@
+{
+  "name": "ALGohary AI",
+  "short": "GoharyAI",
+  "handle": "@goharyai",
+  "author": "Ahmed Farouk Gohary",
+  "logo": {
+    "on_light": "assets/brand/logo-dark-on-light.png",
+    "on_dark": "assets/brand/logo-light-on-dark.png"
+  },
+  "colors": {
+    "accent": "#E40000",
+    "ink": "#303438",
+    "ink_deep": "#1B1D20",
+    "paper": "#F8F8F8",
+    "white": "#FFFFFF",
+    "grey": "#8A8F9C",
+    "grey_light": "#D0D0D0"
+  },
+  "themes": {
+    "light": { "bg": "#F8F8F8", "text": "#303438", "accent": "#E40000", "muted": "#8A8F9C", "logo": "on_light" },
+    "dark":  { "bg": "#1B1D20", "text": "#F8F8F8", "accent": "#E40000", "muted": "#D0D0D0", "logo": "on_dark" }
+  },
+  "fonts": { "latin": "Inter", "arabic": "Cairo", "display": "Montserrat" },
+  "caption": { "style": "tiktok", "highlight": "#E40000" },
+  "watermark": "@goharyai",
+  "signature": "Ahmed Farouk Gohary",
+  "rules": [
+    "The red is an accent only: one element per frame (a word, a bar, a triangle), never a full background.",
+    "Wordmark goes bottom-left or end card only; never stretched, never recolored.",
+    "No other brand names or logos unless the user asks."
+  ]
+}

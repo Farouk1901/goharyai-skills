@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--
+  Overlay cards for real footage (transparent background). Render with:
+    node render.js <dir> all --png --range A,B   then   overlay.py video out.mp4 <dir>
+  data.json: { "words": [...], "dur": 30, "cards": [
+      {"type":"title",  "a":2.0, "b":5.0, "text":"3 tools", "sub":"I use daily", "pos":"top"},
+      {"type":"bullets","a":6.0, "b":11.0, "title":"The stack", "items":["Claude","ffmpeg","Chrome"], "pos":"top"},
+      {"type":"stat",   "a":12.0,"b":15.0, "value":1200, "suffix":"%", "label":"faster", "pos":"center"},
+      {"type":"lower",  "a":0.5, "b":3.5, "text":"Ahmed Farouk Gohary", "sub":"@goharyai"},
+      {"type":"pill",   "a":16,  "b":19,  "text":"Step 1 · Record", "pos":"top"},
+      {"type":"end",    "a":27,  "b":30,  "text":"Follow for more", "sub":"@goharyai"} ],
+    "theme": "dark" }
+  Times may also be words: "a": "@tools" = start of the word "tools" (first occurrence; "@tools#2" = second).
+  The card enters with a pop/slide, holds, and leaves 0.3 s before b. Nothing else is drawn, so the video shows through.
+-->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;background:transparent;overflow:hidden}
+  #scene{position:absolute;inset:0;font-family:var(--latin),var(--arabic),sans-serif;color:#fff}
+  .card{position:absolute;left:60px;right:60px;opacity:0;will-change:transform,opacity}
+  .top{top:170px}.center{top:50%;transform:translateY(-50%)}.bottom{bottom:420px}
+  .box{background:rgba(27,29,32,.86);backdrop-filter:blur(8px);border-radius:28px;padding:34px 40px;box-shadow:0 18px 50px rgba(0,0,0,.35);border-left:10px solid var(--accent)}
+  .light .box{background:rgba(248,248,248,.94);color:var(--ink)}
+  .title{font-weight:800;font-size:78px;line-height:1.08;letter-spacing:-.01em}
+  .sub{font-weight:600;font-size:40px;opacity:.78;margin-top:10px}
+  .items{margin-top:14px;display:grid;gap:14px}
+  .item{display:flex;align-items:center;gap:18px;font-weight:700;font-size:48px;opacity:0}
+  .item i{width:22px;height:22px;background:var(--accent);border-radius:50%;flex:none}
+  .stat{text-align:center}.stat .v{font-weight:900;font-size:170px;line-height:1;letter-spacing:-.03em}.stat .v b{color:var(--accent)}
+  .stat .l{font-weight:700;font-size:46px;opacity:.8;margin-top:6px}
+  .lower{left:60px;right:auto;bottom:250px;display:flex;align-items:center;gap:18px}
+  .lower .bar{width:12px;height:92px;background:var(--accent);border-radius:6px}
+  .lower .n{font-weight:800;font-size:46px;line-height:1.05}.lower .h{font-weight:600;font-size:34px;opacity:.75}
+  .pill{left:50%;right:auto;transform:translateX(-50%);background:var(--accent);color:#fff;font-weight:800;font-size:44px;padding:16px 38px;border-radius:999px;white-space:nowrap}
+  .end{inset:0;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:rgba(27,29,32,.92)}
+  .end .t{font-weight:900;font-size:96px;text-align:center;line-height:1.05;padding:0 80px}.end .s{font-weight:700;font-size:48px;color:var(--accent)}
+  [dir=rtl] .box{border-left:0;border-right:10px solid var(--accent)}
+</style>
+</head>
+<body><div id="scene"></div>
+<script>
+const B = window.BRAND, C = B.colors, root = document.documentElement;
+root.style.setProperty('--accent', C.accent); root.style.setProperty('--ink', C.ink);
+root.style.setProperty('--latin', '"' + B.fonts.latin + '"'); root.style.setProperty('--arabic', '"' + B.fonts.arabic + '"');
+const isAr = s => /[؀-ۿ]/.test(s || '');
+const tm = v => typeof v === 'number' ? v : (() => { const m = String(v).match(/^@(.+?)(?:#(\d+))?$/); return m ? K.wt(m[1], +(m[2] || 1)) : 0; })();
+
+K.onInit = () => {
+  const theme = K.D.theme || 'dark';
+  document.getElementById('scene').className = theme;
+  (K.D.cards || []).forEach(c => {
+    const a = tm(c.a), b = tm(c.b), pos = c.pos || (c.type === 'stat' ? 'center' : 'top');
+    const dir = isAr(c.text || c.title || (c.items || [])[0]) ? 'rtl' : 'ltr';
+    const html = () => {
+      const w = `<div class="card ${c.type === 'lower' ? 'lower' : c.type === 'pill' ? 'pill' : c.type === 'end' ? 'end' : pos}" dir="${dir}">`;
+      if (c.type === 'title') return w + `<div class="box"><div class="title">${c.text}</div>${c.sub ? `<div class="sub">${c.sub}</div>` : ''}</div></div>`;
+      if (c.type === 'bullets') return w + `<div class="box">${c.title ? `<div class="title" style="font-size:60px">${c.title}</div>` : ''}<div class="items">${c.items.map(i => `<div class="item"><i></i><span>${i}</span></div>`).join('')}</div></div></div>`;
+      if (c.type === 'stat') return w + `<div class="stat"><div class="v"><b class="num">0</b>${c.suffix || ''}</div><div class="l">${c.label || ''}</div></div></div>`;
+      if (c.type === 'lower') return w + `<div class="bar"></div><div><div class="n">${c.text}</div>${c.sub ? `<div class="h">${c.sub}</div>` : ''}</div></div>`;
+      if (c.type === 'pill') return w + c.text + `</div>`;
+      if (c.type === 'end') return w + `${K.logo(theme, 110)}<div class="t">${c.text || ''}</div>${c.sub ? `<div class="s">${c.sub}</div>` : ''}</div>`;
+      return w + '</div>';
+    };
+    K.scene({ a: () => a, b: () => b, html, upd: (t, u, rootEl) => {
+      const el = rootEl.querySelector('.card'); if (!el) return;
+      const outK = K.pr(t, b - .3, b);                          // leave
+      if (c.type === 'end') { el.style.opacity = K.eo(K.pr(t, a, a + .5)) * (1 - outK); return; }
+      if (c.type === 'pill') { K.pop(el, t, a, .35, 'translateX(-50%)'); }
+      else if (c.type === 'lower') { K.slideIn(el, t, a, .45, -80); }
+      else if (pos === 'center') { K.pop(el, t, a, .4, 'translateY(-50%)'); }
+      else { K.fade(el, t, a, .4, 40); }
+      if (outK > 0) { el.style.opacity = 1 - outK; el.style.transform += ` translateY(${-outK * 30}px)`; }
+      if (c.type === 'bullets') rootEl.querySelectorAll('.item').forEach((it, i) => { const k = K.eo(K.pr(t, a + .25 + i * .22, a + .55 + i * .22)); it.style.opacity = k; it.style.transform = `translateX(${(1 - k) * (dir === 'rtl' ? 40 : -40)}px)`; });
+      if (c.type === 'stat') { const n = rootEl.querySelector('.num'); n.textContent = K.fmt(K.count(c.value, t, a + .1, c.countDur || 1.1)); }
+    } });
+  });
+  // scenes are picked by time; when none matches draw nothing
+  K.S.push({ a: () => -1, b: () => 0, html: () => '' });
+};
+</script>
+</body>
+</html>

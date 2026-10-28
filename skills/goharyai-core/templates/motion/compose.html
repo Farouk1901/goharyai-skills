@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--
+  Full-frame motion scenes (no footage). Render with:  node render.js <dir> all --out video.mp4
+  data.json: { "words": [...from tts/transcribe...], "theme": "dark"|"light", "w":1080, "h":1920,
+    "captions": true,                       // word-timed captions at the bottom third
+    "hot": ["reel", "command"],             // words drawn in the accent colour
+    "scenes": [
+      {"type":"hero",    "a":0,       "b":"@hours",  "text":"Most people *waste* hours", "sub":"editing one reel"},
+      {"type":"type",    "a":"@This", "b":"@music",  "text":"one command.", "label":"$ goharyai-reel"},
+      {"type":"list",    "a":5, "b":9,  "title":"What it does", "items":["Cuts silences","Word captions","Music + SFX"]},
+      {"type":"stat",    "a":9, "b":12, "value":12, "suffix":"×", "label":"faster than manual"},
+      {"type":"image",   "a":12,"b":16, "src":"file:///C:/path/screen.png", "caption":"The result", "zoom":1.08},
+      {"type":"quote",   "a":16,"b":20, "text":"“Build once, post everywhere.”", "who":"Ahmed Farouk Gohary"},
+      {"type":"end",     "a":20,"b":24, "text":"Follow for the next one", "sub":"@goharyai"} ] }
+  Times: seconds or "@word" / "@word#2". *asterisks* mark accent words. Scenes cross-fade on a 0.35 s blur.
+  The bottom 420 px is kept clear for captions; the brand wordmark sits bottom-left on every scene.
+-->
+<style>
+  html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+  #scene{position:absolute;inset:0;font-family:var(--latin),var(--arabic),sans-serif;color:var(--text)}
+  .bgfx{position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,rgba(228,0,0,.14),transparent 55%),radial-gradient(circle at 20% 85%,rgba(255,255,255,.05),transparent 50%)}
+  .light .bgfx{background:radial-gradient(circle at 70% 20%,rgba(228,0,0,.08),transparent 55%)}
+  .wrap{position:absolute;left:80px;right:80px;top:0;bottom:420px;display:flex;flex-direction:column;justify-content:center;gap:28px}
+  .hot,.hero b{color:var(--accent)}
+  .hero{font-weight:900;font-size:112px;line-height:1.02;letter-spacing:-.025em}
+  .hero .w{display:inline-block;opacity:0}
+  .sub{font-weight:600;font-size:48px;opacity:.75}
+  .term{background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.12);border-radius:26px;padding:40px 44px;font-family:"JetBrains Mono",Consolas,monospace}
+  .light .term{background:#1B1D20;color:#F8F8F8}
+  .term .lab{font-size:36px;opacity:.6;margin-bottom:18px}.term .tx{font-size:64px;font-weight:700;line-height:1.2;word-break:break-word}
+  .term .cur{display:inline-block;width:.55em;height:1em;background:var(--accent);vertical-align:-.15em;margin-left:6px}
+  .ttl{font-weight:800;font-size:68px;margin-bottom:10px}
+  .item{display:flex;align-items:center;gap:26px;font-weight:700;font-size:58px;opacity:0;padding:22px 30px;border-radius:22px;background:rgba(255,255,255,.06)}
+  .light .item{background:rgba(48,52,56,.06)}
+  .item .n{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;flex:none}
+  .stat{text-align:center}.stat .v{font-weight:900;font-size:260px;line-height:1;letter-spacing:-.04em}.stat .v b{color:var(--accent)}.stat .l{font-size:54px;font-weight:700;opacity:.8}
+  .img{border-radius:30px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);background:#000}.img img{width:100%;display:block}
+  .cap{font-weight:700;font-size:44px;opacity:.8;text-align:center}
+  .quote{font-weight:800;font-size:76px;line-height:1.15;border-left:12px solid var(--accent);padding-left:40px}.who{font-size:42px;font-weight:600;opacity:.7;margin-top:14px}
+  [dir=rtl] .quote{border-left:0;border-right:12px solid var(--accent);padding-left:0;padding-right:40px}
+  .end{align-items:center;text-align:center}.end .t{font-weight:900;font-size:100px;line-height:1.05}.end .s{font-weight:700;font-size:52px;color:var(--accent)}
+  #logo{position:absolute;left:60px;bottom:70px;opacity:.9}
+  #cap{position:absolute;left:60px;right:60px;top:1480px;text-align:center;font-weight:800;font-size:66px;line-height:1.15;color:#fff;-webkit-text-stroke:7px #000;paint-order:stroke fill;text-shadow:0 4px 10px rgba(0,0,0,.35);display:none}
+  #cap span{margin:0 .12em}#cap .hot{color:var(--accent)}
+  .tri{position:absolute;right:70px;top:90px;opacity:.9}
+</style>
+</head>
+<body><div id="scene"></div>
+<script>
+const B = window.BRAND, C = B.colors, root = document.documentElement;
+root.style.setProperty('--accent', C.accent); root.style.setProperty('--ink', C.ink);
+root.style.setProperty('--latin', '"' + B.fonts.latin + '"'); root.style.setProperty('--arabic', '"' + B.fonts.arabic + '"');
+const isAr = s => /[\u0600-\u06FF]/.test(s || '');
+const hot = s => (s || '').replace(/\*(.+?)\*/g, '<b>$1</b>');
+const tm = v => typeof v === 'number' ? v : (() => { const m = String(v).match(/^@(.+?)(?:#(\d+))?$/); return m ? K.wt(m[1], +(m[2] || 1)) : 0; })();
+
+K.onInit = () => {
+  const theme = K.D.theme || 'dark';
+  root.style.setProperty('--bg', theme === 'dark' ? C.ink_deep : C.paper);
+  root.style.setProperty('--text', theme === 'dark' ? C.paper : C.ink);
+  const chrome = `<div class="bgfx"></div><div class="tri">${K.icon.tri(C.accent, 44)}</div><div id="logo">${K.logo(theme, 54)}</div><div id="cap"></div>`;
+  const scenes = K.D.scenes || [];
+  scenes.forEach((s, idx) => {
+    const a = tm(s.a), b = tm(s.b);
+    const dir = isAr(s.text || s.title || (s.items || [])[0]) ? 'rtl' : 'ltr';
+    const html = () => {
+      let inner = '';
+      if (s.type === 'hero') inner = `<div class="hero">${hot(s.text).split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ')}</div>${s.sub ? `<div class="sub">${hot(s.sub)}</div>` : ''}`;
+      else if (s.type === 'type') inner = `<div class="term">${s.label ? `<div class="lab">${s.label}</div>` : ''}<div class="tx"><span class="typed"></span><span class="cur"></span></div></div>`;
+      else if (s.type === 'list') inner = `${s.title ? `<div class="ttl">${hot(s.title)}</div>` : ''}${s.items.map((it, i) => `<div class="item"><div class="n">${i + 1}</div><div>${hot(it)}</div></div>`).join('')}`;
+      else if (s.type === 'stat') inner = `<div class="stat"><div class="v"><b class="num">0</b>${s.suffix || ''}</div><div class="l">${hot(s.label)}</div></div>`;
+      else if (s.type === 'image') inner = `<div class="img"><img src="${s.src}"></div>${s.caption ? `<div class="cap">${hot(s.caption)}</div>` : ''}`;
+      else if (s.type === 'quote') inner = `<div class="quote">${hot(s.text)}</div>${s.who ? `<div class="who">— ${s.who}</div>` : ''}`;
+      else if (s.type === 'end') inner = `<div class="end" style="display:flex;flex-direction:column;gap:30px">${K.logo(theme, 140)}<div class="t">${hot(s.text)}</div>${s.sub ? `<div class="s">${s.sub}</div>` : ''}</div>`;
+      return chrome + `<div class="wrap" dir="${dir}">${inner}</div>`;
+    };
+    K.scene({ a: () => a, b: () => b, html, upd: (t, u, R) => {
+      const w = R.querySelector('.wrap');
+      const inK = K.eo(K.pr(t, a, a + .35)), outK = K.pr(t, b - .35, b);
+      w.style.opacity = inK * (1 - outK); w.style.filter = `blur(${(1 - inK) * 8 + outK * 8}px)`; w.style.transform = `scale(${K.lerp(1.04, 1, inK) + outK * .03})`;
+      if (s.type === 'hero') R.querySelectorAll('.hero .w').forEach((el, i) => { const k = K.eo(K.pr(t, a + .08 + i * .09, a + .38 + i * .09)); el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * 40}px)`; });
+      if (s.type === 'type') { R.querySelector('.typed').textContent = K.type(s.text, t, a + .25, s.cps || 22); R.querySelector('.cur').style.opacity = Math.floor(t * 2.5) % 2 ? 0 : 1; }
+      if (s.type === 'list') R.querySelectorAll('.item').forEach((el, i) => { const k = K.eo(K.pr(t, a + .3 + i * .25, a + .6 + i * .25)); el.style.opacity = k; el.style.transform = `translateX(${(1 - k) * (dir === 'rtl' ? 60 : -60)}px)`; });
+      if (s.type === 'stat') R.querySelector('.num').textContent = K.fmt(K.count(s.value, t, a + .15, s.countDur || 1.2));
+      if (s.type === 'image') { const img = R.querySelector('.img'); img.style.transform = `scale(${K.lerp(1, s.zoom || 1.06, K.pr(t, a, b))})`; }
+      if (K.D.captions !== false) K.caption(t, { el: R.querySelector('#cap'), hot: K.D.hot || [] });
+    } });
+  });
+};
+</script>
+</body>
+</html>

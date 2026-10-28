@@ -1,0 +1,11 @@
+All fonts in this folder are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org):
+
+- Cairo (Mohamed Gaber) — Cairo-VF.ttf
+- Inter (Rasmus Andersson) — Inter-VF.ttf
+- Montserrat (Julieta Ulanovsky et al.) — Montserrat-VariableFont_wght.ttf
+- IBM Plex Sans Arabic (IBM) — IBMPlexSansArabic-*.ttf
+- Tajawal (Boutros Fonts) — Tajawal-Bold.ttf
+- Noto Kufi Arabic (Google) — NotoKufiArabic-VF.ttf
+- Readex Pro (Thomas Jockin et al.) — ReadexPro-VF.ttf
+
+They may be bundled and redistributed with this project under the OFL terms; the fonts themselves are not sold.

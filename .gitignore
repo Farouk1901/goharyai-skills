@@ -1,0 +1,17 @@
+node_modules/
+skills/goharyai-core/scripts/env.json
+skills/goharyai-core/package-lock.json
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# project folders created while editing (never commit footage)
+work/
+out/
+frames/
+prev/
+*.mp4
+*.mov
+*.wav
+*.mp3

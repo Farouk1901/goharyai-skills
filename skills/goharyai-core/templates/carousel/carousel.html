@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!--
+  Instagram / LinkedIn carousel (1080×1350 by default). Render all slides with:
+    node still.js carousel.html out.png --w 1080 --h 1350 --data data.json --slides N
+  data.json: { "theme": "light"|"dark", "handle": "@goharyai",
+    "slides": [
+      {"type":"cover", "kicker":"5 prompts", "title":"that *sell* for you", "sub":"save this"},
+      {"type":"point", "n":1, "title":"Describe the buyer", "body":"Age, problem, objection. One line each.", "code":"Act as a copywriter for …"},
+      {"type":"image", "title":"The result", "src":"file:///C:/x.png", "caption":"before → after"},
+      {"type":"list",  "title":"The stack", "items":["Claude","ffmpeg","Chrome"]},
+      {"type":"cta",   "title":"Want the full pack?", "sub":"Link in bio", "button":"Get it free"} ] }
+  Every slide carries a page counter, the handle, and a thin accent bar; the cover has the wordmark.
+  White style (light theme) = clean editorial; dark theme = cinematic. *asterisks* = accent colour.
+-->
+<style>
+  html,body{margin:0;overflow:hidden;background:var(--bg)}
+  #scene{position:absolute;inset:0;font-family:var(--latin),var(--arabic),sans-serif;color:var(--text);padding:90px 80px;box-sizing:border-box;display:flex;flex-direction:column}
+  .bar{position:absolute;left:0;top:0;height:14px;width:34%;background:var(--accent)}
+  .meta{position:absolute;left:80px;right:80px;bottom:60px;display:flex;justify-content:space-between;font-weight:700;font-size:30px;opacity:.6}
+  .kicker{font-weight:800;font-size:34px;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:24px}
+  .title{font-weight:900;font-size:104px;line-height:1.02;letter-spacing:-.03em}.title b,.body b{color:var(--accent)}
+  .sub{font-weight:600;font-size:44px;opacity:.75;margin-top:28px}
+  .num{font-weight:900;font-size:220px;line-height:.9;color:var(--accent);opacity:.18;position:absolute;right:70px;top:40px}
+  [dir=rtl] .num{right:auto;left:70px}
+  .ptitle{font-weight:900;font-size:84px;line-height:1.05;letter-spacing:-.02em;margin-top:140px}
+  .body{font-weight:600;font-size:46px;line-height:1.4;margin-top:36px;opacity:.9}
+  .code{margin-top:40px;background:var(--ink-deep);color:#F8F8F8;border-radius:24px;padding:34px 40px;font-family:"JetBrains Mono",Consolas,monospace;font-size:36px;line-height:1.45;white-space:pre-wrap;border-left:10px solid var(--accent)}
+  .light .code{box-shadow:0 20px 50px rgba(0,0,0,.18)}
+  .img{margin-top:40px;border-radius:26px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.25)}.img img{width:100%;display:block}
+  .cap{margin-top:22px;font-weight:700;font-size:38px;opacity:.75;text-align:center}
+  .items{margin-top:40px;display:grid;gap:22px}.item{display:flex;gap:26px;align-items:center;font-weight:700;font-size:52px;padding:26px 32px;border-radius:22px;background:rgba(127,127,127,.1)}
+  .item i{width:60px;height:60px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-style:normal;flex:none}
+  .cta{justify-content:center;align-items:center;text-align:center}.btn{margin-top:50px;background:var(--accent);color:#fff;font-weight:800;font-size:48px;padding:30px 70px;border-radius:999px}
+  .cover,.point,.image,.list{justify-content:center}.cover #logo{position:absolute;left:80px;top:80px}
+  .point .ptitle{margin-top:0}
+</style>
+</head>
+<body><div id="scene"></div>
+<script>
+const B = window.BRAND, C = B.colors, root = document.documentElement;
+root.style.setProperty('--accent', C.accent); root.style.setProperty('--ink-deep', C.ink_deep);
+root.style.setProperty('--latin', '"' + B.fonts.latin + '"'); root.style.setProperty('--arabic', '"' + B.fonts.arabic + '"');
+const hot = s => (s || '').replace(/\*(.+?)\*/g, '<b>$1</b>');
+let D = {};
+window.init = d => { D = d; const theme = d.theme || 'light'; root.style.setProperty('--bg', theme === 'dark' ? C.ink_deep : C.paper); root.style.setProperty('--text', theme === 'dark' ? C.paper : C.ink); };
+window.slide = i => {
+  const s = D.slides[i - 1], n = D.slides.length, theme = D.theme || 'light';
+  const dir = /[\u0600-\u06FF]/.test(s.title || s.body || '') ? 'rtl' : 'ltr';
+  let inner = '';
+  if (s.type === 'cover') inner = `<div id="logo">${K.logo(theme, 64)}</div>${s.kicker ? `<div class="kicker">${s.kicker}</div>` : ''}<div class="title">${hot(s.title)}</div>${s.sub ? `<div class="sub">${hot(s.sub)}</div>` : ''}`;
+  else if (s.type === 'point') inner = `<div class="num">${String(s.n ?? i - 1).padStart(2, '0')}</div><div class="ptitle">${hot(s.title)}</div>${s.body ? `<div class="body">${hot(s.body)}</div>` : ''}${s.code ? `<div class="code">${s.code}</div>` : ''}`;
+  else if (s.type === 'image') inner = `<div class="ptitle" style="margin-top:40px">${hot(s.title)}</div><div class="img"><img src="${s.src}"></div>${s.caption ? `<div class="cap">${hot(s.caption)}</div>` : ''}`;
+  else if (s.type === 'list') inner = `<div class="ptitle" style="margin-top:40px">${hot(s.title)}</div><div class="items">${s.items.map((it, k) => `<div class="item"><i>${k + 1}</i><span>${hot(it)}</span></div>`).join('')}</div>`;
+  else if (s.type === 'cta') inner = `${K.logo(theme, 90)}<div class="title" style="margin-top:50px">${hot(s.title)}</div>${s.sub ? `<div class="sub">${hot(s.sub)}</div>` : ''}${s.button ? `<div class="btn">${s.button}</div>` : ''}`;
+  document.getElementById('scene').className = `${theme} ${s.type}`; document.getElementById('scene').dir = dir;
+  document.getElementById('scene').innerHTML = `<div class="bar"></div>${inner}<div class="meta"><span>${D.handle || B.handle || ''}</span><span>${i} / ${n}</span></div>`;
+};
+</script>
+</body>
+</html>
