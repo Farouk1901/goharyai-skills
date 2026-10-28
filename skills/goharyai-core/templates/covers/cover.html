@@ -43,7 +43,9 @@ window.init = d => {
   root.style.setProperty('--bg', theme === 'dark' ? C.ink_deep : C.paper); root.style.setProperty('--text', theme === 'dark' ? C.paper : C.ink);
   const dir = /[\u0600-\u06FF]/.test(d.title) ? 'rtl' : 'ltr';
   const base = Math.min(W, H);                              // type scales with the short side
-  const top = portrait ? '22%' : '12%', bottom = portrait ? '22%' : '12%';
+  /* split: the person fills the lower 62 %, so the text block sits in the upper half and is one step smaller */
+  const top = portrait ? (layout === 'split' ? '10%' : '22%') : '12%', bottom = portrait ? (layout === 'split' ? '52%' : '22%') : '12%';
+  if (layout === 'split' && !d.size) d.size = portrait ? .105 : .11;
   document.getElementById('scene').className = `${theme} ${layout}`;
   document.getElementById('scene').innerHTML = `
     ${d.bg ? `<div class="bg" style="background-image:url('${d.bg}')"></div>` : '<div class="fx"></div>'}
