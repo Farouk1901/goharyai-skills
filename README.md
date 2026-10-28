@@ -14,6 +14,24 @@ Five [Claude Code](https://claude.com/claude-code) skills that turn Claude into 
 
 All five share **goharyai-core**: brand kit, fonts, renderer, transcription, voice, captions, music, mixing and QA. Swap `brand.json` and the logo, and every output is in your brand.
 
+## What it makes
+
+**goharyai-reel** — captions timed to each word, lower-third, bullet card timed to the speech, end card (contact sheet of a finished reel):
+
+![reel](docs/examples/reel-sheet.jpg)
+
+**goharyai-motion** — hero text, terminal typing, numbered list, end card, all from a 3-line script and a generated voice:
+
+![motion](docs/examples/motion.jpg)
+
+**goharyai-covers** — reel cover, split cover with a cut-out, YouTube thumbnail, carousel:
+
+<p>
+<img src="docs/examples/cover-reel.jpg" width="24%"> <img src="docs/examples/cover-split.jpg" width="24%"> <img src="docs/examples/thumbnail.jpg" width="50%">
+</p>
+
+![carousel](docs/examples/carousel.jpg)
+
 ## Install
 ```bash
 git clone https://github.com/Farouk1901/goharyai-skills

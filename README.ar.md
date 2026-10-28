@@ -14,6 +14,24 @@
 
 الخمسة بيشتركوا في **goharyai-core**: الهوية، الخطوط، الرندر، التفريغ، الصوت، الكابشن، الموسيقى، المكس، والفحص. غيّر `brand.json` واللوجو وكل المخرجات تبقى بهويتك إنت.
 
+## نماذج
+
+**goharyai-reel** — كابشن بتوقيت كل كلمة، شريط الاسم، كرت نقاط متزامن مع الكلام، وكرت نهاية:
+
+![reel](docs/examples/reel-sheet.jpg)
+
+**goharyai-motion** — عنوان متحرك، كتابة في التيرمينال، قائمة مرقّمة، وكرت نهاية، كله من سكربت 3 سطور وصوت مولّد:
+
+![motion](docs/examples/motion.jpg)
+
+**goharyai-covers** — كفر ريل، كفر بصورة مقصوصة، ثمبنيل يوتيوب، وكاروسيل:
+
+<p>
+<img src="docs/examples/cover-reel.jpg" width="24%"> <img src="docs/examples/cover-split.jpg" width="24%"> <img src="docs/examples/thumbnail.jpg" width="50%">
+</p>
+
+![carousel](docs/examples/carousel.jpg)
+
 ## التثبيت
 ```bash
 git clone https://github.com/Farouk1901/goharyai-skills
