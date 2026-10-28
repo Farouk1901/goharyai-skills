@@ -48,6 +48,7 @@
     if (!el) return; const c = K.capAt(t);
     if (!c) { el.style.display = 'none'; return; }
     el.style.display = 'block';
+    el.dir = /[؀-ۿ]/.test(c.map(w => w.w).join(' ')) ? 'rtl' : 'ltr';     // Arabic chunks read right-to-left
     el.innerHTML = c.map(w => { const k = K.eo(K.pr(t, w.s - .05, w.s + .14)); if (k <= 0) return ''; const isHot = hot.some(h => norm(w.w).startsWith(norm(h))); return `<span class="${isHot ? 'hot' : ''}" style="opacity:${k};display:inline-block;transform:translateY(${(1 - k) * 10}px) scale(${K.lerp(.9, 1, k)})">${K.disp(w.w)}</span>`; }).join(' ');
   };
 
